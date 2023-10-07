@@ -29,3 +29,9 @@ material3 = { group = "androidx.compose.material3", name = "material3" }
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 
+[bundles]
+compose = ["ui", "material3", "ui-graphics", "activity-compose", "ui-tooling-preview"]
+androidx = ["core-ktx", "lifecycle-runtime-ktx"]
+debugLibraries = ["ui-tooling", "ui-test-manifest"]
+androidTest = ["androidx-test-ext-junit", "espresso-core", "ui-test-junit4"]
+test = ["junit"]
