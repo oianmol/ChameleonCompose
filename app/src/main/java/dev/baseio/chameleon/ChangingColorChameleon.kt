@@ -2,6 +2,7 @@ package dev.baseio.chameleon
 
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.catch
@@ -13,9 +14,9 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(FlowPreview::class)
 class ChangingColorChameleon :
-    Chameleon<ChangeColorEvent, ExampleChameleonState>(createInitialState = {
-        ExampleChameleonState()
-    }) {
+    ViewModel(),
+    Chameleon<ChangeColorEvent, ExampleChameleonState> by
+    ChameleonImpl(initialState = ExampleChameleonState()) {
 
     private val random = Random
 
@@ -40,8 +41,8 @@ class ChangingColorChameleon :
     }
 }
 
-data class ExampleChameleonState(val color: Color? = null) : ChameleonState
+data class ExampleChameleonState(val color: Color? = null)
 
-sealed interface ChangeColorEvent : ChameleonEvent {
+sealed interface ChangeColorEvent {
     data object ClickPerformed : ChangeColorEvent
 }

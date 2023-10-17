@@ -3,16 +3,17 @@ package dev.baseio.chameleon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
-fun <Event : ChameleonEvent, State : ChameleonState> ChameleonUi(
+fun <Event, State> ChameleonUi(
     chameleon: Chameleon<Event, State>,
     content: @Composable Chameleon<Event, State>.(State) -> Unit,
 ) {
@@ -22,31 +23,40 @@ fun <Event : ChameleonEvent, State : ChameleonState> ChameleonUi(
     }
 }
 
-interface ChameleonState
+interface Chameleon<Event, State> {
+    val event: SharedFlow<Event>
+    val uiState: StateFlow<State>
+    fun setEvent(event: Event, viewModelScope: CoroutineScope)
+    fun setState(reduce: State.() -> State)
+}
 
-interface ChameleonEvent
+class ChameleonImpl<Event, State>(initialState: State) : Chameleon<Event, State> {
 
-open class Chameleon<Event : ChameleonEvent, State : ChameleonState>(
-    createInitialState: () -> State,
-) : ViewModel() {
-
-    private val initialState: State by lazy { createInitialState() }
-
+    // Get Current State
     private val currentState: State
         get() = uiState.value
 
     private val _uiState: MutableStateFlow<State> = MutableStateFlow(initialState)
-    val uiState = _uiState.asStateFlow()
+    override val uiState = _uiState.asStateFlow()
 
     private val _event: MutableSharedFlow<Event> = MutableSharedFlow()
-    val event = _event.asSharedFlow()
+    override val event = _event.asSharedFlow()
 
-    fun sendEvent(event: Event) {
+    /**
+     * Set new Event
+     */
+    override fun setEvent(
+        event: Event,
+        viewModelScope: CoroutineScope,
+    ) {
         val newEvent = event
         viewModelScope.launch { _event.emit(newEvent) }
     }
 
-    fun setState(reduce: State.() -> State) {
+    /**
+     * Set new Ui State
+     */
+    override fun setState(reduce: State.() -> State) {
         val newState = currentState.reduce()
         _uiState.value = newState
     }
