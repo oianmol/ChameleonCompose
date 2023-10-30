@@ -7,7 +7,7 @@ ChameleonUi is a composable which allows you to define a viewModel for it, so th
 
 ```
 @Composable
-fun <Event : ChameleonEvent, State : ChameleonState> ChameleonUi(
+fun <Event, State> ChameleonUi(
     chameleon: Chameleon<Event, State>, // takes in a chameleon of type Event and State
     content: @Composable Chameleon<Event, State>.(State) -> Unit,
 ) {
@@ -16,10 +16,6 @@ fun <Event : ChameleonEvent, State : ChameleonState> ChameleonUi(
         content(uiState)
     }
 }
-
-interface ChameleonState
-
-interface ChameleonEvent
 
 ```
 
