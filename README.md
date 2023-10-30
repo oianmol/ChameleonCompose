@@ -23,30 +23,43 @@ interface ChameleonEvent
 
 ```
 
-## A Chameleon is a viewModel but allows you to work with MVI design for Unidirectional flow.
+## A Chameleon is provided to viewModel which allows you to work with MVI design for Unidirectional flow.
 
 ```
-open class Chameleon<Event : ChameleonEvent, State : ChameleonState>(
-    createInitialState: () -> State,
-) : ViewModel() {
+interface Chameleon<Event, State> {
+    val event: SharedFlow<Event>
+    val uiState: StateFlow<State>
+    fun setEvent(event: Event, viewModelScope: CoroutineScope)
+    fun setState(reduce: State.() -> State)
+}
 
-    private val initialState: State by lazy { createInitialState() }
+class ChameleonImpl<Event, State>(initialState: State) : Chameleon<Event, State> {
 
+    // Get Current State
     private val currentState: State
         get() = uiState.value
 
     private val _uiState: MutableStateFlow<State> = MutableStateFlow(initialState)
-    val uiState = _uiState.asStateFlow()
+    override val uiState = _uiState.asStateFlow()
 
     private val _event: MutableSharedFlow<Event> = MutableSharedFlow()
-    val event = _event.asSharedFlow()
+    override val event = _event.asSharedFlow()
 
-    fun sendEvent(event: Event) {
+    /**
+     * Set new Event
+     */
+    override fun setEvent(
+        event: Event,
+        viewModelScope: CoroutineScope,
+    ) {
         val newEvent = event
         viewModelScope.launch { _event.emit(newEvent) }
     }
 
-    fun setState(reduce: State.() -> State) {
+    /**
+     * Set new Ui State
+     */
+    override fun setState(reduce: State.() -> State) {
         val newState = currentState.reduce()
         _uiState.value = newState
     }
@@ -59,6 +72,9 @@ open class Chameleon<Event : ChameleonEvent, State : ChameleonState>(
 ### you can create multiple chameleons and multiple ChameleonUI composables too
 
 ```
+
+class ChangingColorChameleon : ViewModel() : Chameleon by ChameleonImpl()
+
 @Composable
 fun Greeting(
     modifier: Modifier = Modifier,
