@@ -65,7 +65,6 @@ class ChameleonImpl<Event, State>(initialState: State) : Chameleon<Event, State>
 ## Usage
 
 ### Just create a chameleon UI and wrap your UI within it, 
-### you can create multiple chameleons and multiple ChameleonUI composables too
 
 ```
 
